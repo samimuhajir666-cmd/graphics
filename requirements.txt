@@ -1,0 +1,6 @@
+streamlit
+streamlit-mic-recorder
+numpy
+scipy
+librosa
+plotly
