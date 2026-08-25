@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom Styling for Phone Recorder Visualizer Container
+# Custom Styling for Phone Recorder Visualizer Container (FIXED TYPO HERE)
 st.markdown("""
 <style>
     .recorder-box {
@@ -28,7 +28,7 @@ st.markdown("""
         margin-bottom: 20px;
     }
 </style>
-""", unsafe_allow_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ==========================================
 # 🧠 1. DSP AUDIO ENGINE CLASS
@@ -107,7 +107,7 @@ def render_phone_recorder_waveform(y_signal, num_bars=70):
     chunks = np.array_split(np.abs(y_signal), num_bars)
     bar_heights = [float(np.mean(chunk)) * 250 for chunk in chunks]
     
-    # Normalize bar heights (min 4px, max 70px)
+    # Normalize bar heights (min 4px, max 65px)
     max_h = max(bar_heights) if max(bar_heights) > 0 else 1
     normalized_bars = [max(4, int((h / max_h) * 65)) for h in bar_heights]
 
