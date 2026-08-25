@@ -86,6 +86,27 @@ class VoiceParameterEngine:
 # ==========================================
 # 📈 2. VISUALIZATION FUNCTIONS
 # ==========================================
+def create_waveform_graph(y_signal, sr):
+    """NEW: Raw Audio Waveform (Time Domain)"""
+    time_stamps = np.linspace(0, len(y_signal) / sr, len(y_signal))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=time_stamps,
+        y=y_signal,
+        mode='lines',
+        name='Amplitude',
+        line=dict(color='#74c7ec', width=1)
+    ))
+    fig.update_layout(
+        title="🌊 Audio Waveform (Time Domain Signal)",
+        xaxis_title="Time (Seconds)",
+        yaxis_title="Amplitude",
+        template="plotly_dark",
+        height=280,
+        margin=dict(l=40, r=40, t=40, b=40)
+    )
+    return fig
+
 def create_frequency_graph(freq_data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -181,6 +202,12 @@ if audio_output and audio_output.get("bytes"):
         noise_res = engine.extract_noise_and_snr(y_signal, sr)
 
     st.success("✅ Analysis Complete!")
+    
+    # NEW: Audio Player + Waveform Graph Right Below Recording
+    st.audio(audio_bytes, format="audio/wav")
+    fig_wave = create_waveform_graph(y_signal, sr)
+    st.plotly_chart(fig_wave, use_container_width=True)
+    
     st.markdown("---")
     
     # METRICS DISPLAY
