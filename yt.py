@@ -4,6 +4,7 @@ import scipy.io.wavfile as wav
 import librosa
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 from streamlit_mic_recorder import mic_recorder
 
 # ==========================================
@@ -14,6 +15,20 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Custom Styling for Phone Recorder Visualizer Container
+st.markdown("""
+<style>
+    .recorder-box {
+        background-color: #11111b;
+        border: 2px solid #313244;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+""", unsafe_allow_allow_html=True)
 
 # ==========================================
 # 🧠 1. DSP AUDIO ENGINE CLASS
@@ -84,29 +99,39 @@ class VoiceParameterEngine:
         }
 
 # ==========================================
-# 📈 2. VISUALIZATION FUNCTIONS
+# 📱 PHONE VOICE RECORDER WAVEFORM COMPONENT
 # ==========================================
-def create_waveform_graph(y_signal, sr):
-    """NEW: Raw Audio Waveform (Time Domain)"""
-    time_stamps = np.linspace(0, len(y_signal) / sr, len(y_signal))
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=time_stamps,
-        y=y_signal,
-        mode='lines',
-        name='Amplitude',
-        line=dict(color='#74c7ec', width=1)
-    ))
-    fig.update_layout(
-        title="🌊 Audio Waveform (Time Domain Signal)",
-        xaxis_title="Time (Seconds)",
-        yaxis_title="Amplitude",
-        template="plotly_dark",
-        height=280,
-        margin=dict(l=40, r=40, t=40, b=40)
-    )
-    return fig
+def render_phone_recorder_waveform(y_signal, num_bars=70):
+    """Generates a Smartphone Voice Memos Style Vertical Bar Waveform"""
+    # Downsample audio array into fixed number of bar heights (RMS energy per block)
+    chunks = np.array_split(np.abs(y_signal), num_bars)
+    bar_heights = [float(np.mean(chunk)) * 250 for chunk in chunks]
+    
+    # Normalize bar heights (min 4px, max 70px)
+    max_h = max(bar_heights) if max(bar_heights) > 0 else 1
+    normalized_bars = [max(4, int((h / max_h) * 65)) for h in bar_heights]
 
+    # HTML/JS Canvas UI matching Smartphone Recorder Layout
+    bars_html = "".join([
+        f'<div style="width: 4px; height: {h}px; background: linear-gradient(180deg, #89b4fa, #f38ba8); border-radius: 3px; margin: 0 2px; transition: height 0.2s ease;"></div>'
+        for h in normalized_bars
+    ])
+    
+    html_code = f"""
+    <div style="background-color: #181825; padding: 20px; border-radius: 16px; border: 1px solid #313244; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <div style="color: #a6adc8; font-family: sans-serif; font-size: 12px; letter-spacing: 1px; margin-bottom: 12px; font-weight: 600;">
+            🎙️ SMARTPHONE VOICE RECORDER WAVEFORM
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; height: 90px; background-color: #11111b; border-radius: 12px; padding: 0 10px; overflow-x: auto;">
+            {bars_html}
+        </div>
+    </div>
+    """
+    components.html(html_code, height=155)
+
+# ==========================================
+# 📈 2. VISUALIZATION FUNCTIONS (PLOTLY)
+# ==========================================
 def create_frequency_graph(freq_data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -122,7 +147,7 @@ def create_frequency_graph(freq_data):
         yaxis_title="Magnitude",
         xaxis=dict(range=[0, 4000]),
         template="plotly_dark",
-        height=320
+        height=300
     )
     return fig
 
@@ -141,7 +166,7 @@ def create_pitch_graph(pitch_data):
         xaxis_title="Time (Seconds)",
         yaxis_title="Pitch (Hz)",
         template="plotly_dark",
-        height=320
+        height=300
     )
     return fig
 
@@ -166,7 +191,7 @@ def create_noise_graph(noise_data):
         xaxis_title="Time (Seconds)",
         yaxis_title="Energy Power (dB)",
         template="plotly_dark",
-        height=320
+        height=300
     )
     return fig
 
@@ -203,10 +228,9 @@ if audio_output and audio_output.get("bytes"):
 
     st.success("✅ Analysis Complete!")
     
-    # NEW: Audio Player + Waveform Graph Right Below Recording
+    # 📱 DISPLAY PHONE RECORDER STYLE WAVEFORM BARS & AUDIO PLAYER
     st.audio(audio_bytes, format="audio/wav")
-    fig_wave = create_waveform_graph(y_signal, sr)
-    st.plotly_chart(fig_wave, use_container_width=True)
+    render_phone_recorder_waveform(y_signal)
     
     st.markdown("---")
     
